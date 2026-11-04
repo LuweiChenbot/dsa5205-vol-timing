@@ -1,0 +1,7 @@
+# Python >= 3.10. Versions below are the ones the pipeline was tested with.
+pandas==2.3.3
+numpy==2.2.6
+matplotlib==3.10.9
+yfinance==1.7.0
+pyarrow==25.0.1
+tabulate==0.10.0

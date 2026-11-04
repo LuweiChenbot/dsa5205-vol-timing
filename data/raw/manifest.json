@@ -1,0 +1,35 @@
+{
+  "downloaded_utc": "2026-11-03T16:34:28+00:00",
+  "python": "3.14.6",
+  "files": {
+    "SPY_yahoo.csv": {
+      "source": "Yahoo Finance (SPY)",
+      "rows": 3530,
+      "first": "2012-01-03",
+      "last": "2026-01-15",
+      "sha256": "c3e1f625649acb678d10902d66f2aa933b15e220c8620852b215cd3d1a06e13f"
+    },
+    "BIL_yahoo.csv": {
+      "source": "Yahoo Finance (BIL)",
+      "rows": 3530,
+      "first": "2012-01-03",
+      "last": "2026-01-15",
+      "sha256": "595fbe60c4fcf271d1ae3cf4ca73ccdea17b4e2f2aa3865fe7926d664beb0d95"
+    },
+    "VIX_cboe.csv": {
+      "source": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
+      "rows": 9307,
+      "sha256": "2b76ef381fbff39fa7a500d4973d01952ccb47368a27b603b88e6bc78e990b42"
+    },
+    "VIX3M_cboe.csv": {
+      "source": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv",
+      "rows": 4307,
+      "sha256": "db5f0e5ac79c77f7add6268a6fd059230f440966b65defc14587ac0430a0ade5"
+    },
+    "DTB3_fred.csv": {
+      "source": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DTB3",
+      "sha256": "3b653f5fdb20c46b1d89296350be720bfcfdabf99e03ddb2cb897190c0ded47b"
+    }
+  },
+  "yfinance": "1.7.0"
+}
