@@ -22,6 +22,8 @@ DOWNLOAD_START = "2012-01-01"
 DOWNLOAD_END = "2026-01-16"          # yfinance end date is exclusive
 SAMPLE_START = "2014-01-01"
 SAMPLE_END = "2025-12-31"
+DESIGN_END = "2018-12-31"
+TEST_START = "2019-01-01"
 
 # ---------------------------------------------------------------- assets
 ETFS = ["SPY", "BIL"]                # traded assets (Yahoo Finance)

@@ -4,8 +4,10 @@ Run:  python -m tests.test_features
 """
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
+from src import config
 from src.data.build import load_panel
 from src.features import feature_build as fb
 
@@ -32,6 +34,24 @@ def main() -> None:
 
     # 4. The saved file matches a fresh build.
     pd.testing.assert_frame_equal(fb.load_features(), feat, check_freq=False)
+
+    # 5. The declared selection rules, applied to the design period only, reproduce DROPPED.
+    design = fb.build_candidates(panel).loc[config.SAMPLE_START:config.DESIGN_END]
+    dropped, _ = fb.select_features(design)
+    assert dropped == fb.DROPPED, dropped
+
+    # 6. PastScaler: statistics come from the training rows only.
+    train, test = feat.loc[config.SAMPLE_START:config.DESIGN_END], feat.loc[config.TEST_START:]
+    sc = fb.PastScaler().fit(train)
+    z = sc.transform(train)
+    assert np.allclose(z.mean(), 0, atol=1e-12) and np.allclose(z.std(ddof=0), 1)
+    shocked = test * 100                                  # wild test data must not move the fit
+    sc2 = fb.PastScaler().fit(train)
+    pd.testing.assert_frame_equal(sc2.transform(test), sc.transform(test))
+    assert (sc.transform(shocked)[sc.lo_.index] <= (sc.hi_ - sc.mean_[sc.hi_.index]) / sc.std_[sc.hi_.index] + 1e-12).all().all()
+    for b in fb.BINARY + ["x_cond_ts"]:                   # not clipped
+        assert b not in sc.lo_.index
+        assert z[b].nunique() == train[b].nunique()
 
     print(f"{feat.shape[1]} features x {s.sum()} sample days checked. ALL TESTS PASSED")
 
