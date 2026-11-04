@@ -72,6 +72,7 @@ rationale (from `features.ipynb`, section 2).
 | Implied vs realised | `vrp` VIX/100 − annualised 20-day vol | 20 d | price of protection; negative in crashes |
 | Interactions | `x_cond_ts` `dec_cond` × (`ts_ratio` − 1) | 20 d | lets the term-structure slope differ on decline days |
 | | `x_mom_backw` `dec_mom` × `ts_backw` | 5 d / 20 d | lets the speed of a sell-off matter differently in backwardation, the clearest picture of capitulation |
+| | `x_mom_ts` `dec_mom` × (`ts_ratio` − 1) | 5 d / 20 d | continuous version of the above; uses the ratio on every day, not only in backwardation |
 
 **Reading the interaction.** In a linear model
 y = b1·TS + b2·D + b3·(D × TS) + …, the term-structure slope is b1 on normal
@@ -82,7 +83,7 @@ is the research question. The ratio enters as `ts_ratio − 1`, a fixed centre
 `dec_cond × ts_ratio` almost identical to `dec_cond`, and centring on a sample
 mean would leak future data.
 
-**Feature selection.** We started from 17 candidates and kept 13 using three
+**Feature selection.** We started from 18 candidates and kept 14 using three
 rules that were declared before looking at any outcome and that use feature
 values from the design period (2014–2018) only:
 
@@ -94,13 +95,14 @@ values from the design period (2014–2018) only:
 3. keep a term-structure interaction only if it has at least 15 separate
    episodes of material variation in the design period, about three a year
    (|x| above 10% of its maximum; episodes more than 10 trading days apart).
-   `dec_cond` × (`ts_ratio` − 1) has 25 episodes and `dec_mom` × `ts_backw` 17,
-   so both are kept; `dec_dd` × (`ts_ratio` − 1) has 9 and is dropped. The
-   interactions are informative only on the few days when both parts are
-   active (in-sample the trigger coincides with backwardation on 114 days that
-   fall into about 37 episodes), so an interaction needs enough such episodes
-   to be estimated at all. The two kept interactions are not redundant: their
-   correlation is −0.64 in the design period.
+   `dec_mom` × (`ts_ratio` − 1) has 26 episodes, `dec_cond` × (`ts_ratio` − 1)
+   25 and `dec_mom` × `ts_backw` 17, so these three are kept;
+   `dec_dd` × (`ts_ratio` − 1) has 9 and is dropped. An interaction carries
+   information only on days when both parts are active (for example, the
+   trigger coincides with backwardation on 114 in-sample days, about 37
+   episodes), so it needs enough such episodes to be estimated. The three kept
+   interactions are not redundant: their pairwise |corr| is at most 0.64 in the
+   design period.
 
 `select_features()` in `src/features/feature_build.py` applies the rules and
 the test suite checks that it reproduces the final list.
@@ -108,7 +110,7 @@ the test suite checks that it reproduces the final list.
 **Feature sets.** Three nested sets let the modelling stage test what the VIX
 information adds: `base` (the 5 price-based features), `vix` (`base` plus 6 VIX,
 term-structure and implied-vs-realised features, 11 in total) and `full` (`vix`
-plus the two interactions, 13). Each step adds few parameters, which matters because
+plus the three interactions, 14). Each step adds few parameters, which matters because
 daily returns are very noisy: as a rule of thumb, each extra feature costs about
 1/n of out-of-sample R², and a plausible true R² for daily index returns is well
 below 1%.
@@ -167,14 +169,17 @@ For transparency, the iterations behind the final features:
    5 values of K, judged on the share of unresolved labels.
 2. Features: a first set of 17 candidates; 14 after dropping three collinear
    candidates using full-sample (2014–2025) correlations; 12 after limiting the
-   interactions to one; 13 in the final version, which keeps two.
+   interactions to one; 13 after relaxing rule 3 (below); 14 in the final
+   version, after adding `dec_mom × (ts_ratio − 1)` as an 18th candidate so
+   that one momentum interaction does not depend on backwardation. The same
+   rules were applied to it.
 3. Before the design/test split was fixed, we ran two exploratory rolling-ridge
    probes on 2017–2025 out-of-sample returns, and an earlier version kept only
    `dec_mom × ts_backw`, partly because its coefficient sign was stable in that
    probe. Because this used test-period outcomes, we replaced it with
    outcome-free rules applied to the design period only. A first version of
    rule 3 kept a single interaction and picked `dec_cond × (ts_ratio − 1)`. We
-   then changed rule 3 to the 15-episode minimum, which keeps both. That
+   then changed rule 3 to the 15-episode minimum, which keeps several. That
    threshold was set after seeing the episode counts (which use no returns),
    and keeping `dec_mom × ts_backw` is not fully independent of the earlier
    probe. The test period 2019–2025 was therefore seen once in exploration,

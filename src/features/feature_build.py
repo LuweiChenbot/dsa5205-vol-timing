@@ -32,16 +32,17 @@ INTERACTION_PARTS = {
     "x_cond_ts": ("dec_cond", "ts_ratio"),
     "x_dd_ts": ("dec_dd", "ts_ratio"),
     "x_mom_backw": ("dec_mom", "ts_backw"),
+    "x_mom_ts": ("dec_mom", "ts_ratio"),
     "x_cond_vrp": ("dec_cond", "vrp"),
     "x_cond_vixchg": ("dec_cond", "vix_chg5"),
 }
-TS_INTERACTIONS = ["x_cond_ts", "x_dd_ts", "x_mom_backw"]   # rule 3 applies to these
+TS_INTERACTIONS = ["x_cond_ts", "x_dd_ts", "x_mom_backw", "x_mom_ts"]   # rule 3 applies to these
 
 DROPPED = ["x_cond_vrp", "x_cond_vixchg", "ts_chg5", "x_dd_ts"]
 
 FEATURE_SETS = {"base": ["dec_dd", "dec_mom", "dec_vol", "dec_cond", "ma200_gap"]}
 FEATURE_SETS["vix"] = FEATURE_SETS["base"] + ["vix_log", "vix_z", "vix_chg5", "ts_ratio", "ts_backw", "vrp"]
-FEATURE_SETS["full"] = FEATURE_SETS["vix"] + ["x_cond_ts", "x_mom_backw"]
+FEATURE_SETS["full"] = FEATURE_SETS["vix"] + ["x_cond_ts", "x_mom_backw", "x_mom_ts"]
 
 BINARY = ["dec_cond", "ts_backw"]
 
@@ -72,13 +73,14 @@ def interactions(f: pd.DataFrame) -> pd.DataFrame:
         "x_cond_ts": f["dec_cond"] * ts,
         "x_dd_ts": f["dec_dd"] * ts,
         "x_mom_backw": f["dec_mom"] * f["ts_backw"],
+        "x_mom_ts": f["dec_mom"] * ts,
         "x_cond_vrp": f["dec_cond"] * f["vrp"],
         "x_cond_vixchg": f["dec_cond"] * f["vix_chg5"],
     })
 
 
 def build_candidates(panel: pd.DataFrame) -> pd.DataFrame:
-    """All 17 candidate features, before pruning."""
+    """All 18 candidate features, before pruning."""
     f = decline_features(panel).join(vix_features(panel))
     f["vrp"] = panel["vix_close"] / 100 - f["dec_vol"] * np.sqrt(config.TRADING_DAYS)
     return f.join(interactions(f))

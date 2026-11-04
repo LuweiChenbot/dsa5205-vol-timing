@@ -32,6 +32,7 @@
     "ts_backw",
     "vrp",
     "x_cond_ts",
-    "x_mom_backw"
+    "x_mom_backw",
+    "x_mom_ts"
   ]
 }
