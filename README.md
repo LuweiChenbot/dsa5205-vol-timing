@@ -26,7 +26,8 @@ Run every command from the repository root.
 | Rebuild from the saved snapshot | `python -m src.data.pipeline --offline` | same as above, no network |
 | Offline test on mock data | `python -m tests.test_pipeline` | prints `ALL TESTS PASSED` |
 | Decline-event parameter sweep | `python -m src.features.trigger_explorer` | `reports/features/trigger_sweep.csv` |
-| Decline events and labels | `python -m src.features.events` | `data/processed/events.csv`, `events.parquet` |
+| Decline events and labels (evaluation) | `python -m src.features.events` | `data/processed/events.csv`, `events.parquet` |
+| Model features, every trading day | run `src/features/features.ipynb` | `data/processed/features.csv`, `features.parquet`, `feature_sets.json` |
 | Event leakage test | `python -m tests.test_events` | prints `ALL TESTS PASSED` |
 
 Expected output: `build` reports about 3,000 in-sample trading days
@@ -44,6 +45,7 @@ src/data/verify.py     data-quality and leakage checks
 src/data/benchmarks.py buy-and-hold benchmarks and metrics
 src/features/events.py decline trigger, non-overlapping events, recovery/continuation labels
 src/features/trigger_explorer.py  sweep of the event parameters (s, p, H)
+src/features/features.ipynb  indicators, interaction terms, feature sets, leakage checks
 tests/test_pipeline.py offline test on synthetic data
 tests/test_events.py   leakage checks for the event columns
 DATA.md                data dictionary and timing convention (read this first)
@@ -63,7 +65,7 @@ records the download time, row counts and SHA-256 hashes in
 `data/raw/manifest.json`. Yahoo occasionally revises history, so a fresh
 download can differ slightly from the snapshot used in the report.
 
-The processed files in `data/processed/` (panel, benchmarks, missing log, events) are
+The processed files in `data/processed/` (panel, benchmarks, missing log, events, features) are
 committed, so after cloning you can load them directly without running `fetch`.
 Rerunning the pipeline overwrites them; only commit the result if the group
 agrees to move to a new snapshot.

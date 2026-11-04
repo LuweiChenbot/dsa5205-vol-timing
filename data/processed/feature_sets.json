@@ -1,0 +1,38 @@
+{
+  "base": [
+    "dec_dd",
+    "dec_mom",
+    "dec_vol",
+    "dec_cond",
+    "ma200_gap"
+  ],
+  "vix": [
+    "dec_dd",
+    "dec_mom",
+    "dec_vol",
+    "dec_cond",
+    "ma200_gap",
+    "vix_log",
+    "vix_z",
+    "vix_chg5",
+    "ts_ratio",
+    "ts_backw",
+    "vrp"
+  ],
+  "full": [
+    "dec_dd",
+    "dec_mom",
+    "dec_vol",
+    "dec_cond",
+    "ma200_gap",
+    "vix_log",
+    "vix_z",
+    "vix_chg5",
+    "ts_ratio",
+    "ts_backw",
+    "vrp",
+    "x_cond_ts",
+    "x_dd_ts",
+    "x_mom_backw"
+  ]
+}
