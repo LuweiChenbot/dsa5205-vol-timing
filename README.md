@@ -79,7 +79,7 @@ Rerunning will the pipeline overwrites them.
 
 ### Final feature set
 
-The prepared features are held in `data/processed/features.parquet`, and each row is indexed by the decision date t. `data/processed/feature_sets.json` splits the whole feature set into three categories, allowing further evaluation on term-structure-specific features.
+The prepared features are held in `data/processed/features.parquet`, and each row is indexed by the decision date t. The file covers the in-sample days only (2014-01-02 to 2025-12-31); the 2012–13 warm-up rows are left out. `data/processed/feature_sets.json` splits the whole feature set into three categories, allowing further evaluation on term-structure-specific features.
 
 | Set | Features |
 |---|---|
@@ -114,7 +114,7 @@ from src.features.feature_build import load_features
 
 panel, feat = load_panel(), load_features()
 sets = json.loads((config.PROCESSED_DIR / "feature_sets.json").read_text())
-X, y = feat[sets["full"]], panel["fwd_spy_xs"]
+X, y = feat[sets["full"]], panel.loc[feat.index, "fwd_spy_xs"]
 ```
 
 ### Decline events (for evaluation)

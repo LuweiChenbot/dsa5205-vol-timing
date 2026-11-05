@@ -32,8 +32,10 @@ def main() -> None:
         cut = panel.index[int(len(panel) * frac)]
         pd.testing.assert_frame_equal(feat.loc[:cut], fb.build_features(panel.loc[:cut]), check_exact=True)
 
-    # 4. The saved file matches a fresh build.
-    pd.testing.assert_frame_equal(fb.load_features(), feat, check_freq=False)
+    # 4. The saved file matches a fresh build and holds in-sample days only.
+    saved = fb.load_features()
+    pd.testing.assert_frame_equal(saved, feat.loc[s], check_freq=False)
+    assert saved.notna().all().all()
 
     # 5. The declared selection rules, applied to the design period only, reproduce DROPPED.
     design = fb.build_candidates(panel).loc[config.SAMPLE_START:config.DESIGN_END]

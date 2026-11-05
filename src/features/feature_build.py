@@ -6,7 +6,8 @@ Use PastScaler for that. Definitions, the selection rules behind DROPPED and the
 leakage checks are walked through in src/features/features.ipynb.
 
 Run:  python -m src.features.feature_build
-Output: data/processed/features.csv (+ features.parquet), data/processed/feature_sets.json
+Output: data/processed/features.csv (+ features.parquet), in-sample days only,
+        data/processed/feature_sets.json
 """
 from __future__ import annotations
 
@@ -176,8 +177,13 @@ def load_features() -> pd.DataFrame:
     return pd.read_csv(config.PROCESSED_DIR / "features.csv", parse_dates=["date"], index_col="date")
 
 
+def sample_features(panel: pd.DataFrame) -> pd.DataFrame:
+    """The final features on in-sample days only; the warm-up rows are left out."""
+    return build_features(panel).loc[panel["in_sample"]]
+
+
 def main() -> None:
-    save(build_features(load_panel()))
+    save(sample_features(load_panel()))
 
 
 if __name__ == "__main__":
