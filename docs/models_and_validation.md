@@ -85,7 +85,7 @@ selected-model performance is not an unbiased second evaluation.
 
 **Research-history limitation:** Member 2's report discloses earlier parameter
 exploration and rolling-ridge probes involving 2017–2025 outcomes
-(`docs/report_features_sections.md`, “Exploratory checks”). The new implementation
+(`docs/report_features_sections.md`, “Design log”). The new implementation
 enforces information timing, but cannot make 2019–2025 a pristine research
 holdout retroactively. Preserve this disclosure in the final report. Do not
 retune settings after seeing the generated evaluation results.
@@ -197,6 +197,9 @@ Use identical actual holding dates for SPY/BIL benchmarks and model comparisons.
   ten-day SPY barrier paths. Treat this as a secondary ranking diagnostic.
 - Ridge coefficients do not come with ordinary OLS standard errors or p-values.
   A separate predeclared small OLS/HAC analysis would be a different study.
+- Alpha selection is restricted to the declared grid. Choosing an endpoint does
+  not establish a global optimum; the grid must not be expanded in response to
+  the evaluation results.
 
 The implementation deliberately covers the primary one-day ridge experiment.
 Multi-horizon models, classifiers, portfolio sizing and trading performance are
