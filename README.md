@@ -28,6 +28,8 @@ Run every command from the repository root.
 | Offline test on mock data (optional)| `python -m tests.test_pipeline` | prints `ALL TESTS PASSED` |
 | Build decline events and labels (optional) | `python -m src.features.events` | `data/processed/events.csv`, `events.parquet` |
 | Event leakage test (optional)| `python -m tests.test_events` | prints `ALL TESTS PASSED` |
+| 6. Ridge models and walk-forward validation | `python -m src.models.pipeline` | `data/processed/models/`, `reports/models/summary.md` |
+| Model and handoff tests | `python -m unittest tests.test_models -v` | timing, selection, forecasts and export checks |
 
 Expected output: `build` reports about 3,000 in-sample trading days
 (2014-01-02 to 2025-12-31). `verify` exits with code 0 and prints no `FAIL`
@@ -53,6 +55,8 @@ tests/test_pipeline.py offline test on synthetic data
 tests/test_features.py leakage checks for the features and PastScaler
 tests/test_events.py   leakage checks for the event columns
 tests/test_targets.py  timing checks for the targets
+src/models/           ridge fitting, walk-forward selection, diagnostics and Member 4 loader
+tests/test_models.py   model leakage, numerical and handoff checks
 
 DATA.md                data dictionary and timing convention (read this first)
 ```
@@ -155,7 +159,40 @@ sc = PastScaler().fit(X_train)
 X_train_z, X_new_z = sc.transform(X_train), sc.transform(X_new)
 ```
 
-### Handover Notes for the next stage (plz remove when done !)
+## Models and validation
+
+The implemented model stage compares price-only ridge, VIX-level ridge, ridge
+with term structure, and the full interaction model, against a rolling historical
+mean. A fifth ridge model holds the VIX-level penalty fixed when adding term
+structure. Daily fits use exactly 756 completed labels; alpha is selected on
+2017–2018 validation labels realised by 2018-12-31, then frozen for 2019–2025.
+`ridge_full` is the predeclared primary model.
+
+Run `python -m src.models.pipeline` from the root. No downloads are needed.
+See [the model protocol and Member 4 guide](docs/models_and_validation.md) for
+the methodology, file schemas and complete examples, and
+[the generated results](reports/models/summary.md) for the actual comparisons.
+
+```python
+from src.models.handoff import load_signal
+signal = load_signal("ridge_full")
+# Indexed by decision date; includes prediction, execution_date and label_end_date.
+```
+
+Signals contain decimal excess-return predictions, not portfolio weights or
+probabilities. Outcomes are separate files. The final 2025 decision earns a
+return ending on 2026-01-05, so retain the panel's January buffer in backtests.
+
+**Research-history limitation:** earlier feature exploration examined 2017–2025
+outcomes, as documented in `docs/report_features_sections.md`. The implemented
+walk-forward forecasts respect information timing, but 2019–2025 is not a
+pristine, untouched research holdout. Negative forecast or trading results
+should be reported, not used to retune the experiment.
+
+### Feature-stage handover and possible extensions
+
+The suggestions below are optional extensions from the feature stage. They are
+not part of the implemented one-day ridge experiment above.
 
 **Rebuild and check** (just for a fresh build of feature sets)
 

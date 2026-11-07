@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "settings": {
+    "train_window": 756,
+    "alphas": [
+      0.1,
+      1.0,
+      10.0,
+      100.0,
+      1000.0
+    ],
+    "validation_start": "2017-01-01",
+    "design_end": "2018-12-31",
+    "test_start": "2019-01-01",
+    "test_end": "2025-12-31"
+  },
+  "feature_sets": {
+    "base": [
+      "dec_dd",
+      "dec_mom",
+      "dec_vol",
+      "dec_cond",
+      "ma200_gap"
+    ],
+    "vix_level": [
+      "dec_dd",
+      "dec_mom",
+      "dec_vol",
+      "dec_cond",
+      "ma200_gap",
+      "vix_log",
+      "vix_z",
+      "vix_chg5",
+      "vrp"
+    ],
+    "vix": [
+      "dec_dd",
+      "dec_mom",
+      "dec_vol",
+      "dec_cond",
+      "ma200_gap",
+      "vix_log",
+      "vix_z",
+      "vix_chg5",
+      "ts_ratio",
+      "ts_backw",
+      "vrp"
+    ],
+    "full": [
+      "dec_dd",
+      "dec_mom",
+      "dec_vol",
+      "dec_cond",
+      "ma200_gap",
+      "vix_log",
+      "vix_z",
+      "vix_chg5",
+      "ts_ratio",
+      "ts_backw",
+      "vrp",
+      "x_cond_ts",
+      "x_mom_backw",
+      "x_mom_ts"
+    ]
+  },
+  "selected_alphas": {
+    "base": 1000.0,
+    "vix_level": 1000.0,
+    "vix": 1000.0,
+    "full": 1000.0
+  },
+  "matched_term_structure_alpha": 1000.0,
+  "primary_model": "ridge_full",
+  "selection_objective": "pooled validation MSE",
+  "tie_break": "largest alpha for exact MSE ties",
+  "target": "fwd_spy_xs",
+  "units": "decimal excess total return; 0.001 means 0.1 percentage points",
+  "timing": "decide after 16:15 America/New_York on t; execute close t+1; earn close t+1 to close t+2",
+  "training": "exactly 756 matured labels; scaler and ridge refitted daily; intercept unpenalised",
+  "research_limitation": "Earlier feature research examined 2017\u20132025 outcomes, as disclosed in docs/report_features_sections.md. The present forecasts obey information timing, but 2019\u20132025 is not a pristine, untouched research holdout.",
+  "validation_use": "design/tuning data, not unbiased evaluation; selected alphas use this entire period",
+  "evaluation_decisions": {
+    "first": "2019-01-02",
+    "last": "2025-12-31",
+    "n": 1760
+  },
+  "last_evaluation_outcome": "2026-01-05",
+  "python_version": "3.12.14",
+  "package_versions": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.7.2",
+    "scipy": "1.14.1",
+    "joblib": "1.5.2",
+    "threadpoolctl": "3.6.0",
+    "matplotlib": "3.10.9",
+    "pyarrow": "25.0.1"
+  },
+  "input_sha256": {
+    "data/processed/panel.parquet": "f0483e45b3551dfddb652c89bf7821fe49b726641291db4b0cd7220a603fa37c",
+    "data/processed/features.parquet": "f77be5bb77f84f419395b0ab6284f890e6ada3ab33218aaa12f17b897a9352fb",
+    "data/processed/events.parquet": "1486e3699e82b67d5b55469083125eab9611c696a63ce4ebbf32cd793cb87070"
+  },
+  "source_sha256": {
+    "src/models/__init__.py": "de7d5ba8aea722852536f8b809ab6775d3f59a8371a3d7d494b36062639f3182",
+    "src/models/config.py": "368cf9638ae07972350210cb91cc90738315c8018150f69ecb107942a40a5df7",
+    "src/models/evaluation.py": "dba9634743ca9d89010ed40597530073261679be4865d1d8e46666981e989351",
+    "src/models/handoff.py": "9e59e8c400f4a7ae4fc0234e21619c552c102088d1e7e970508fac0e5cd1707b",
+    "src/models/pipeline.py": "ea7bd13b8214a29d05346f3000b070ca4e8c5b032879d834b4374131dfaeb6db",
+    "src/models/walk_forward.py": "1a2971a0cfe765b1c1b6c8cfb9bcfa034b73b58e8e93cd85b5f16f122931b90a",
+    "src/config.py": "6e51b38a09708ea583861335c3c858289630252a4df0c689a282316f8cdbfdcf",
+    "src/features/feature_build.py": "d1783dbb5c26332b97f69763c21815e8e94d50dc706404c9c1f71bf586f6e124",
+    "src/features/events.py": "ac215579829028b4be3a3791b23dab1192e7353e685fc2cf9aab196a22b03f67",
+    "src/data/build.py": "9e08b978ab1926f0ba75253e88891b5a5c586c5b96da3668e214acefbf116195",
+    "requirements.txt": "e2bcbe98b364f3ab51732e3a8d7d8312ce06e389c897a9ad29071abf73624bed",
+    "docs/models_validation_spec.md": "6f517583e1e46e2b267662c38c3d15dd035aa15600b6131cd6df15ff439bcf26"
+  },
+  "signal_sha256": {
+    "outcomes.csv": "aec6239464bd19847bcf7b1c692c117cc64e8237502fc9eebab2e7ff9ad8ebc7",
+    "predictions.csv": "936b8bd2bd368ebee4947e007f261ebc0982a5b226c26bf68e098fd0ed58b8cc",
+    "predictions_wide.csv": "2e583fccaebbe521bb88bab4063840520f7708b430276ba8c4306bb01fdf8799",
+    "validation_outcomes.csv": "bf89347c59195093c58923ace5b2b894629a098f183ded708eae8240eee716bb",
+    "validation_predictions.csv": "02152ecc70e4f77fc36152716bbe8d82b58ca5fb4c638b47a858bad96ac330e8",
+    "validation_predictions_wide.csv": "28e94d049bbce71d6da7094dcdd3fd78f2488387490a524abbc6d10dc27c6211"
+  },
+  "report_sha256": {
+    "alpha_selection.csv": "efc00051fd1d7d2cd6bb7278ff300b02b2dd9cf4d8df08e0065033a2e977cf20",
+    "coefficients.csv": "c3308999a425a0cfe7416fa07225f8e5fec688a7e057d5f84adc0ecfbb597828",
+    "coverage.csv": "16f747a5976bb49abf0012bb3af756a3fa842ec191c6346f15d54169588f5d65",
+    "event_predictions.csv": "79640e85314aa0a0612dbe6264ffcb3656585e29289627ea9c3911e6e9abd464",
+    "event_summary.csv": "5beeaf25df9b74fdd4efa52c974bcc97c8dae02b11c89af6ea4223b5d38fe821",
+    "feature_comparisons.csv": "5d1820b5c0d7743e56b28a42f8df918e895b747f4617b85feebe8dbb18f6eb20",
+    "forecast_metrics.csv": "fb0b5f7935f146ad069fdeea7b5c745b8342d0b8412e02bfbb978d1c9869d9cd",
+    "summary.md": "b144887f4db8d41fd5c3771b399fb366ac2c582c70859a5192153e9a373f75de",
+    "validation_candidates.csv": "6fb9506de77cf2476b3fe37133f7912241c9925361a082eda294db48f3ee64f7",
+    "validation_mse.png": "abcdafb483e120ecb4601254505a59cee9489f2c2eb6738d2f39999fb5195e50",
+    "yearly_oos_r2.png": "d0566aa98019d797652912bd1d5101a06baba641855b6ce9fc271f60e97c3aaf"
+  }
+}
