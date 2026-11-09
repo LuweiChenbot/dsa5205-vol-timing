@@ -120,6 +120,7 @@ def write_outputs(result: Experiment, settings: ModelConfig,
         source_paths = sorted((config.ROOT / "src" / "models").glob("*.py")) + [
             config.ROOT / "src" / "config.py", config.ROOT / "src" / "features" / "feature_build.py",
             config.ROOT / "src" / "features" / "events.py", config.ROOT / "src" / "data" / "build.py",
+            config.ROOT / "src" / "features" / "targets.py",
             config.ROOT / "requirements.txt", config.ROOT / "docs" / "models_validation_spec.md"]
         manifest = {
             "schema_version": 1, "settings": asdict(settings), "feature_sets": FEATURE_SETS,

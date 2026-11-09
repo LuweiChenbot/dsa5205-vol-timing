@@ -178,6 +178,19 @@ Caveat: this analysis was proposed before any model or backtest result, but
 after the feature stage's exploratory look at declines in backwardation, and it
 was run after the test results were known. It is reported in full.
 
+**The model stage's frozen recovery classifier agrees**
+(`reports/recovery_evaluation/report.md`). It is an exploratory extension,
+designed after the one-day results were seen, that predicts the barrier label
+directly on all 175 test-period trigger days. The term-structure classifier
+does *worse* than simply predicting the historical class mix: log loss
++4.1%, approximate 95% interval [−2.7%, +11.8%]. The price-only classifier
+ranks recoveries slightly better (recovery-vs-rest AUC 0.56 vs 0.52). Separately,
+a design-only sensitivity check with a wider penalty grid selects α = 100,000
+for every feature set, which is almost pure shrinkage to the historical mean
+(`reports/models/extensions/summary.md`). The regression test, the classifier
+and the backtest all point the same way: no stable information in the term
+structure about rebounds after declines.
+
 ## Interpretation (what worked, what did not)
 
 - **No evidence that VIX information improves timing after costs.** Every

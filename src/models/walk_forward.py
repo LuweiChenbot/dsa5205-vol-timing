@@ -8,6 +8,7 @@ import pandas as pd
 from sklearn.linear_model import Ridge
 
 from src.features.feature_build import PastScaler
+from src.features.targets import forward_return
 from src.models.config import FEATURE_SETS
 
 
@@ -26,14 +27,20 @@ class ModelData:
     target: pd.Series
     calendar: pd.DataFrame
     outcomes: pd.DataFrame
+    horizon: int = 1
 
 
-def prepare_data(panel: pd.DataFrame, features: pd.DataFrame) -> ModelData:
-    """Validate the snapshot and map each decision to the two later sessions.
+def prepare_data(panel: pd.DataFrame, features: pd.DataFrame, *, horizon: int = 1,
+                 allow_incomplete_tail: bool = False) -> ModelData:
+    """Validate the snapshot and map each decision to execution and maturity.
 
     Keep the complete panel here: truncating it at the last decision would lose
     that decision's execution and outcome. No rows are imputed or silently dropped.
+    An explicitly allowed incomplete tail has NaT/NaN outcomes and is logged by
+    walk_forward; it cannot enter training or silently become a shorter target.
     """
+    if isinstance(horizon, bool) or not isinstance(horizon, int) or horizon < 1:
+        raise ValueError("horizon must be a positive integer")
     check_dates(panel.index, "panel")
     check_dates(features.index, "features")
     if panel.columns.has_duplicates or features.columns.has_duplicates:
@@ -52,22 +59,36 @@ def prepare_data(panel: pd.DataFrame, features: pd.DataFrame) -> ModelData:
     positions = panel.index.get_indexer(features.index)
     if (positions < 0).any() or (np.diff(positions) != 1).any():
         raise ValueError("features must cover consecutive panel sessions with no gaps")
-    if positions[-1] + 2 >= len(panel):
-        raise ValueError("panel must extend two sessions past the last decision")
+    if positions[-1] + 1 >= len(panel):
+        raise ValueError("panel must include execution after the last decision")
+    completed = positions + horizon + 1 < len(panel)
+    if not completed.all() and not allow_incomplete_tail:
+        raise ValueError("panel must extend two sessions past the last decision" if horizon == 1
+                         else "panel must extend horizon+1 sessions past the last decision")
+    ends = pd.Series(pd.NaT, index=features.index, dtype="datetime64[ns]")
+    ends.loc[completed] = panel.index[positions[completed] + horizon + 1]
     calendar = pd.DataFrame({
         "execution_date": panel.index[positions + 1],
-        "label_end_date": panel.index[positions + 2],
+        "label_end_date": ends.to_numpy(),
     }, index=features.index.rename("decision_date"))
-    realised = panel.iloc[positions + 2][["spy_tr_cc", "bil_tr_cc"]].to_numpy(dtype=float)
-    if not np.isfinite(realised).all() or (realised <= -1).any():
+    daily = panel.iloc[positions[0] + 2:][["spy_tr_cc", "bil_tr_cc"]].to_numpy(dtype=float)
+    if not np.isfinite(daily).all() or (daily <= -1).any():
         raise ValueError("realised asset returns are missing, nonfinite or <= -100%")
-    target = panel.loc[features.index, "fwd_spy_xs"].astype(float).rename("actual_excess_return")
+    if horizon == 1:
+        realised = panel[["spy_tr_cc", "bil_tr_cc"]].shift(-2).loc[features.index].to_numpy(dtype=float)
+    else:
+        realised = np.column_stack([forward_return(panel[f"{asset}_tr_cc"], horizon).loc[features.index]
+                                    for asset in ("spy", "bil")])
     expected = realised[:, 0] - realised[:, 1]
-    if not np.isfinite(target).all() or not np.allclose(target, expected, rtol=1e-8, atol=1e-11):
+    target = (panel.loc[features.index, "fwd_spy_xs"].astype(float).rename("actual_excess_return")
+              if horizon == 1 else pd.Series(expected, index=features.index, name="actual_excess_return"))
+    if not np.isfinite(target.loc[completed]).all() or not np.allclose(
+        target.loc[completed], expected[completed], rtol=1e-8, atol=1e-11
+    ):
         raise ValueError("fwd_spy_xs must equal SPY minus BIL return at label_end_date")
     outcomes = calendar.assign(actual_excess_return=target.to_numpy(),
                                spy_return=realised[:, 0], bil_return=realised[:, 1])
-    return ModelData(features, target, calendar, outcomes)
+    return ModelData(features, target, calendar, outcomes, horizon)
 
 
 @dataclass
@@ -105,7 +126,7 @@ def walk_forward(
         if not alphas or len(set(alphas)) != len(alphas) or any(not np.isfinite(a) or a <= 0 for a in alphas):
             raise ValueError("each model requires unique, finite, positive alphas")
 
-    label_dates = data.calendar.label_end_date.to_numpy()
+    label_dates = data.calendar.label_end_date.dropna().to_numpy()
     column_positions = {name: data.features.columns.get_indexer(columns)
                         for name, columns in FEATURE_SETS.items()}
     predictions, coverage, coefficients = [], [], []
@@ -114,7 +135,9 @@ def walk_forward(
         stop = int(np.searchsorted(label_dates, date.to_datetime64(), side="right"))
         timing = data.calendar.loc[date]
         status = "predicted"
-        if outcome_cutoff is not None and timing.label_end_date > outcome_cutoff:
+        if pd.isna(timing.label_end_date):
+            status = "incomplete_outcome_calendar"
+        elif outcome_cutoff is not None and timing.label_end_date > outcome_cutoff:
             status = "outcome_after_design_end"
         elif stop < train_window:
             status = "insufficient_history"
@@ -134,7 +157,7 @@ def walk_forward(
         Xz = scaler.transform(X).to_numpy()
         xz = scaler.transform(data.features.loc[[date]]).to_numpy()
         audit = {"decision_date": date, "execution_date": timing.execution_date,
-                 "label_end_date": timing.label_end_date, "horizon": 1,
+                 "label_end_date": timing.label_end_date, "horizon": data.horizon,
                  "n_train": train_window, "train_start_date": X.index[0],
                  "train_end_date": X.index[-1],
                  "train_last_label_end_date": pd.Timestamp(label_dates[stop - 1]),

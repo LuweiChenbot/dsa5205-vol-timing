@@ -1,4 +1,9 @@
-# Keep data/signal files byte-identical across OSes: manifest SHA-256 checks
-# fail if Windows checkouts convert LF to CRLF.
+# Keep hashed files byte-identical across OSes: the manifests' SHA-256 checks
+# (data, signals, reports, and the source/docs they record) fail if Windows
+# checkouts convert LF to CRLF.
 data/** -text
 reports/** -text
+src/** -text
+docs/** -text
+tests/** -text
+requirements.txt -text

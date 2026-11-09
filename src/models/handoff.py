@@ -17,7 +17,7 @@ PREDICTION_COLUMNS = (*DATE_COLUMNS, "model_id", "feature_set", "horizon", "alph
                       "n_train", "decline", "prediction")
 
 
-def validate_predictions(frame: pd.DataFrame) -> None:
+def validate_predictions(frame: pd.DataFrame, *, expected_horizon: int = 1) -> None:
     """Reject partial, mixed-model or outcome-contaminated signal exports."""
     if frame.empty or set(frame.columns) != set(PREDICTION_COLUMNS) or frame.columns.has_duplicates:
         raise ValueError("signal file must contain exactly the documented prediction columns")
@@ -34,8 +34,8 @@ def validate_predictions(frame: pd.DataFrame) -> None:
     for column in ("prediction", "n_train", "horizon", "decline"):
         if not pd.api.types.is_numeric_dtype(frame[column]) or not np.isfinite(frame[column]).all():
             raise ValueError(f"{column} must be finite and numeric")
-    if (frame.horizon != 1).any() or not frame.decline.isin([0, 1]).all():
-        raise ValueError("expected one-day forecasts and binary decline flags")
+    if (frame.horizon != expected_horizon).any() or not frame.decline.isin([0, 1]).all():
+        raise ValueError(f"expected horizon={expected_horizon} forecasts and binary decline flags")
     if (frame.n_train < 2).any() or (frame.n_train % 1 != 0).any() or frame.n_train.nunique() != 1:
         raise ValueError("all rows must use the same integer training window")
     if not ((frame.train_start_date <= frame.train_end_date) &
@@ -67,15 +67,15 @@ def validate_predictions(frame: pd.DataFrame) -> None:
         raise ValueError("matched term-structure models must share alpha")
 
 
-def wide_predictions(predictions: pd.DataFrame) -> pd.DataFrame:
-    validate_predictions(predictions)
+def wide_predictions(predictions: pd.DataFrame, *, expected_horizon: int = 1) -> pd.DataFrame:
+    validate_predictions(predictions, expected_horizon=expected_horizon)
     calendar = predictions.drop_duplicates("decision_date").set_index("decision_date")
     wide = predictions.pivot(index="decision_date", columns="model_id", values="prediction")
     wide.columns.name = None
     return calendar[["execution_date", "label_end_date", "decline"]].join(wide[list(MODEL_IDS)])
 
 
-def load_predictions(path: str | Path | None = None) -> pd.DataFrame:
+def load_predictions(path: str | Path | None = None, *, expected_horizon: int = 1) -> pd.DataFrame:
     """Load the complete evaluation signal file and validate its schema and timing."""
     path = Path(path) if path is not None else MODEL_DIR / "predictions.csv"
     manifest_path = path.parent / "manifest.json"
@@ -85,7 +85,7 @@ def load_predictions(path: str | Path | None = None) -> pd.DataFrame:
         if expected is None or sha256(path.read_bytes()).hexdigest() != expected:
             raise ValueError("signal checksum does not match manifest; rerun or copy the complete output bundle")
     frame = pd.read_csv(path, parse_dates=list(DATE_COLUMNS), float_precision="round_trip")
-    validate_predictions(frame)
+    validate_predictions(frame, expected_horizon=expected_horizon)
     return frame
 
 

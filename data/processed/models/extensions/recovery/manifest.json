@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "exploratory_notice": "Exploratory extension designed after the original one-day evaluation was seen. Settings use design data only, but no untouched-holdout claim is made. No new evaluation-performance or trading analysis is performed here.",
+  "research_limitation": "Earlier feature research examined 2017\u20132025 outcomes, as disclosed in docs/report_features_sections.md. The present forecasts obey information timing, but 2019\u20132025 is not a pristine, untouched research holdout.",
+  "settings": {
+    "periods": {
+      "train_window": 756,
+      "alphas": [
+        0.1,
+        1.0,
+        10.0,
+        100.0,
+        1000.0
+      ],
+      "validation_start": "2017-01-01",
+      "design_end": "2018-12-31",
+      "test_start": "2019-01-01",
+      "test_end": "2025-12-31"
+    },
+    "ridge_alphas": [
+      0.1,
+      1.0,
+      10.0,
+      100.0,
+      1000.0,
+      10000.0,
+      100000.0
+    ],
+    "classifier_cs": [
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "min_episodes": 12
+  },
+  "python_version": "3.12.14",
+  "package_versions": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.7.2",
+    "scipy": "1.14.1",
+    "pyarrow": "25.0.1"
+  },
+  "source_sha256": {
+    "src/models/__init__.py": "de7d5ba8aea722852536f8b809ab6775d3f59a8371a3d7d494b36062639f3182",
+    "src/models/config.py": "368cf9638ae07972350210cb91cc90738315c8018150f69ecb107942a40a5df7",
+    "src/models/evaluation.py": "dba9634743ca9d89010ed40597530073261679be4865d1d8e46666981e989351",
+    "src/models/extensions/__init__.py": "6d51611bbd1e48bd1ff18f0b039d0ffe770280c78d38fab47aadb1494d9f0d68",
+    "src/models/extensions/config.py": "518725c1401fb7256beabe5b8868c1955aab5096e594903458f14fd08d90e798",
+    "src/models/extensions/handoff.py": "f9f1145c847de76e675d39abf381d67e11fe62b981372d6053e7893f8c409405",
+    "src/models/extensions/pipeline.py": "5fd523610db1a3e81a55d89faae41350d104b6ec164fed9f0eaa7d6fa65e56fb",
+    "src/models/extensions/recovery.py": "14f19fe4178d3de77e3e4f2912b8ad588df65a438c8c8b9d0ac5b1ffdd569a9b",
+    "src/models/handoff.py": "b88ceb9b91ad8dac5f5159c1279b063f66f68f0abbee79790c3ab24e576f05e2",
+    "src/models/pipeline.py": "c78a5b420549dc7191d809475792df57796d9a42d5500627fcad5d7baaaeeccb",
+    "src/models/walk_forward.py": "1fd130e244409bf968097d22926103d02d827dc03549733465df84ad00b1b110",
+    "src/features/events.py": "ac215579829028b4be3a3791b23dab1192e7353e685fc2cf9aab196a22b03f67",
+    "src/features/targets.py": "46105cd4c961de7012fe7e2eb873fbe4948c1b4342a95021ceea5882dad5e924",
+    "src/features/feature_build.py": "d1783dbb5c26332b97f69763c21815e8e94d50dc706404c9c1f71bf586f6e124",
+    "src/config.py": "6e51b38a09708ea583861335c3c858289630252a4df0c689a282316f8cdbfdcf",
+    "src/data/build.py": "9e08b978ab1926f0ba75253e88891b5a5c586c5b96da3668e214acefbf116195",
+    "requirements.txt": "e2bcbe98b364f3ab51732e3a8d7d8312ce06e389c897a9ad29071abf73624bed",
+    "docs/model_extensions_spec.md": "1fca03b5fc35198c380bd89ccbfc2fcf92f1f33e8df1d509de337097dc0aef38"
+  },
+  "input_sha256": {
+    "data/processed/panel.parquet": "f0483e45b3551dfddb652c89bf7821fe49b726641291db4b0cd7220a603fa37c",
+    "data/processed/features.parquet": "f77be5bb77f84f419395b0ab6284f890e6ada3ab33218aaa12f17b897a9352fb",
+    "data/processed/events.parquet": "1486e3699e82b67d5b55469083125eab9611c696a63ce4ebbf32cd793cb87070"
+  },
+  "family": "recovery",
+  "horizon": 10,
+  "selected_penalties": {
+    "price": 10.0,
+    "vix_level": 1.0,
+    "term_structure": 1.0
+  },
+  "feature_sets": {
+    "price": [
+      "dec_dd",
+      "dec_mom"
+    ],
+    "vix_level": [
+      "dec_dd",
+      "dec_mom",
+      "vix_log"
+    ],
+    "term_structure": [
+      "dec_dd",
+      "dec_mom",
+      "vix_log",
+      "ts_ratio"
+    ]
+  },
+  "units": "estimated class probability",
+  "selection_objective": "episode-weighted three-class log loss",
+  "training_weights": "one total weight per matured episode; unweighted training-only scaler",
+  "probability_class_order": [
+    -1,
+    0,
+    1
+  ],
+  "barrier_multiplier": 0.75,
+  "label_maturity": "close of decision+11 trading sessions, including early barrier hits",
+  "decision_timing": "after 16:15 America/New_York; execute next session close",
+  "signal_sha256": {
+    "outcomes.csv": "1605ebaa8aa0dc5a6a79c11b186a1e18c4a4feca63372bf69e71e3b7a15a7cde",
+    "predictions.csv": "b7d382dc1af94414e0a656e849aeb6c00d5c828605e407b0118602e46879f9f2",
+    "predictions_wide.csv": "5b1993c618773298a8519f3e1795586ea85ae18a18fd667c8b5862b2907062d1",
+    "validation_outcomes.csv": "4fd7909e7454f55446b76f4874845c1590f3a2f71c0da234a4d0959f8bfa2a90",
+    "validation_predictions.csv": "96daad26291c81f535264ec855e1869136b910ef0570c13242b7864b7bb352e4",
+    "validation_predictions_wide.csv": "073930a2ad6d3c05b9c35d5d35d194b9a6b0d401aba68afd39c3387de9f5dee9"
+  },
+  "report_sha256": {
+    "coefficients.csv": "197e6c37c86aaf6b8fc71cc43dfed9c4710e2f07c14044a84ffb0b876dd43738",
+    "coverage.csv": "a45b62dc7aca670a9c6b27ec6ba223d1e2bcf23ff39256bd8d7fdc8124b8bda0",
+    "penalty_selection.csv": "239107230f9b10124cae562e3866fd37356a256d539aba1897472b143fb4dbd5",
+    "validation_candidates.csv": "b844c6cc7d80aca1379ec0cbc07b10e9c45bf18ca7006f4ea773488b953d8f2b"
+  }
+}

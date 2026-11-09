@@ -30,6 +30,10 @@ Run every command from the repository root.
 | Event leakage test (optional)| `python -m tests.test_events` | prints `ALL TESTS PASSED` |
 | 6. Ridge models and walk-forward validation | `python -m src.models.pipeline` | `data/processed/models/`, `reports/models/summary.md` |
 | Model and handoff tests | `python -m unittest tests.test_models -v` | timing, selection, forecasts and export checks |
+| Exploratory recovery and ten-day models | `python -m src.models.extensions.pipeline` | `data/processed/models/extensions/`, `reports/models/extensions/` |
+| Extension tests | `python -m unittest tests.test_model_extensions -v` | horizon, class probability and overlap-weighting checks |
+| Evaluate frozen recovery probabilities | `python -m src.analysis.recovery_evaluation` | `reports/recovery_evaluation/`, without any refitting |
+| Diagnose frozen recovery models | `python -m src.analysis.recovery_diagnostics` | `reports/recovery_diagnostics/`: class discrimination, calibration and stability; no retuning |
 | 7. Backtest and evaluation | `python -m src.backtest.pipeline` | `reports/backtest/` (metrics, figures, `summary.md`) |
 | Backtest tests | `python -m unittest tests.test_backtest -v` | execution timing, costs, rules and statistics checks |
 | 8. Interaction test (explanatory) | `python -m src.analysis.interaction_test` | `reports/analysis/interaction_tests.csv`, `.md` |
@@ -198,8 +202,30 @@ should be reported, not used to retune the experiment.
 
 ### Feature-stage handover and possible extensions
 
+The direct recovery classifier, ten-day ridge and design-only expanded-penalty
+investigation are now implemented as a separate **exploratory extension**. See
+[the extension guide](docs/model_extensions.md) and
+[its build summary](reports/models/extensions/summary.md). These additions preserve
+the original one-day experiment and do not add portfolio or evaluation-performance
+analysis. Recovery uses three classes, including unresolved, and only 2–4 features.
+
+A subsequent, separately requested [frozen classifier evaluation](reports/recovery_evaluation/report.md)
+scores the saved 2019–2025 probabilities against historical-prior and uniform
+baselines, with paired episode-block uncertainty intervals. It never refits or
+retunes a model. Reproduce it with `python -m src.analysis.recovery_evaluation`;
+the methodology is in [the evaluation protocol](docs/recovery_evaluation_protocol.md).
+
+The subsequent [frozen-model diagnostics](reports/recovery_diagnostics/report.md)
+examine continuation discrimination, class-probability calibration and sensitivity
+of the original validation rankings to omitting one episode from scoring. Saved
+coefficient contrasts are also summarized. Reproduce with
+`python -m src.analysis.recovery_diagnostics`; see
+[the diagnostic protocol](docs/recovery_diagnostics_protocol.md). These checks
+leave all model settings, forecasts and the primary evaluation unchanged.
+
 The suggestions below are optional extensions from the feature stage. They are
-not part of the implemented one-day ridge experiment above.
+not all part of the implemented experiments. The extension guide describes the
+actual choices; the older suggestions below remain for research context.
 
 **Rebuild and check** (just for a fresh build of feature sets)
 
