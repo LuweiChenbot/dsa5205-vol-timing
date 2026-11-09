@@ -32,6 +32,7 @@ Run every command from the repository root.
 | Model and handoff tests | `python -m unittest tests.test_models -v` | timing, selection, forecasts and export checks |
 | Exploratory recovery and ten-day models | `python -m src.models.extensions.pipeline` | `data/processed/models/extensions/`, `reports/models/extensions/` |
 | Extension tests | `python -m unittest tests.test_model_extensions -v` | horizon, class probability and overlap-weighting checks |
+| Evaluate frozen recovery probabilities | `python -m src.analysis.recovery_evaluation` | `reports/recovery_evaluation/`, without any refitting |
 
 Expected output: `build` reports about 3,000 in-sample trading days
 (2014-01-02 to 2025-12-31). `verify` exits with code 0 and prints no `FAIL`
@@ -199,6 +200,12 @@ investigation are now implemented as a separate **exploratory extension**. See
 [its build summary](reports/models/extensions/summary.md). These additions preserve
 the original one-day experiment and do not add portfolio or evaluation-performance
 analysis. Recovery uses three classes, including unresolved, and only 2–4 features.
+
+A subsequent, separately requested [frozen classifier evaluation](reports/recovery_evaluation/report.md)
+scores the saved 2019–2025 probabilities against historical-prior and uniform
+baselines, with paired episode-block uncertainty intervals. It never refits or
+retunes a model. Reproduce it with `python -m src.analysis.recovery_evaluation`;
+the methodology is in [the evaluation protocol](docs/recovery_evaluation_protocol.md).
 
 The suggestions below are optional extensions from the feature stage. They are
 not all part of the implemented experiments. The extension guide describes the

@@ -25,6 +25,12 @@ coverage are in `reports/models/extensions/summary.md`. These extensions generat
 signals and training diagnostics only, **not evaluation-performance metrics,
 significance tests, allocation rules or backtests**.
 
+The subsequently requested frozen evaluation is a separate command:
+`python -m src.analysis.recovery_evaluation`. It scores the saved 2019–2025
+probabilities without invoking fitting or selection. See
+`reports/recovery_evaluation/report.md` and `docs/recovery_evaluation_protocol.md`.
+It does not change this extension's settings, predictions or build artifacts.
+
 ## Direct recovery classifier
 
 Each decline-trigger day receives the existing ten-session barrier label, using
