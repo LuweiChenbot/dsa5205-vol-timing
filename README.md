@@ -34,6 +34,11 @@ Run every command from the repository root.
 | Extension tests | `python -m unittest tests.test_model_extensions -v` | horizon, class probability and overlap-weighting checks |
 | Evaluate frozen recovery probabilities | `python -m src.analysis.recovery_evaluation` | `reports/recovery_evaluation/`, without any refitting |
 | Diagnose frozen recovery models | `python -m src.analysis.recovery_diagnostics` | `reports/recovery_diagnostics/`: class discrimination, calibration and stability; no retuning |
+| 7. Backtest and evaluation | `python -m src.backtest.pipeline` | `reports/backtest/` (metrics, figures, `summary.md`) |
+| Backtest tests | `python -m unittest tests.test_backtest -v` | execution timing, costs, rules and statistics checks |
+| 8. Interaction test (explanatory) | `python -m src.analysis.interaction_test` | `reports/analysis/interaction_tests.csv`, `.md` |
+| Interaction test checks | `python -m unittest tests.test_analysis -v` | Newey-West and sample-cutoff checks |
+| End-to-end walkthrough (for the video) | open `notebooks/end_to_end.ipynb` with the project venv as kernel (`python -m ipykernel install --user --name dsa5205-vol-timing`) | one call per member (`member1.build_data()` ... `member4.run_backtest()`); steps 2–3 recompute and check against the committed snapshot without overwriting it |
 
 Expected output: `build` reports about 3,000 in-sample trading days
 (2014-01-02 to 2025-12-31). `verify` exits with code 0 and prints no `FAIL`
@@ -61,6 +66,9 @@ tests/test_events.py   leakage checks for the event columns
 tests/test_targets.py  timing checks for the targets
 src/models/           ridge fitting, walk-forward selection, diagnostics and Member 4 loader
 tests/test_models.py   model leakage, numerical and handoff checks
+src/backtest/          score-to-weight rules, execution engine with costs, metrics, figures
+src/analysis/          OLS + Newey-West test of the term-structure x decline interaction
+tests/test_backtest.py backtest timing, cost and statistics checks
 
 DATA.md                data dictionary and timing convention (read this first)
 ```
@@ -285,6 +293,23 @@ the default weight on days without a trigger. In exploratory runs, declines
 that start in backwardation were followed by stronger rebounds than those in
 contango, but both had non-negative average returns, so a weight capped at 1
 leaves little room to gain from the signal.
+
+## Backtest and evaluation
+
+`python -m src.backtest.pipeline` turns every model's out-of-sample forecasts
+into SPY/BIL weights with three predeclared long-only rules (`sign`, primary;
+`mv`; `decline_overlay`), executes them at the next close with 5 bps costs
+(entry and drift rebalancing charged), and compares them against SPY,
+BIL and an exposure-matched static mix. All benchmarks run through the same
+engine and dates. Settings are frozen in `src/backtest/config.py` (answering
+the open questions above: weight capped at 1 in the main run, 1.5 as a
+robustness check; the overlay holds 1 on non-trigger days).
+
+See [the backtest write-up](docs/backtest_and_evaluation.md) for the rules,
+results and interpretation, and `reports/backtest/summary.md` for the generated
+tables. Headline: the primary strategy (ridge_full, sign rule) has a Sharpe of
+0.67 against SPY's 0.80 over 2019–2025, and no strategy's Sharpe differs
+significantly from SPY.
 
 ## Reproducibility
 
