@@ -30,6 +30,8 @@ Run every command from the repository root.
 | Event leakage test (optional)| `python -m tests.test_events` | prints `ALL TESTS PASSED` |
 | 6. Ridge models and walk-forward validation | `python -m src.models.pipeline` | `data/processed/models/`, `reports/models/summary.md` |
 | Model and handoff tests | `python -m unittest tests.test_models -v` | timing, selection, forecasts and export checks |
+| Exploratory recovery and ten-day models | `python -m src.models.extensions.pipeline` | `data/processed/models/extensions/`, `reports/models/extensions/` |
+| Extension tests | `python -m unittest tests.test_model_extensions -v` | horizon, class probability and overlap-weighting checks |
 
 Expected output: `build` reports about 3,000 in-sample trading days
 (2014-01-02 to 2025-12-31). `verify` exits with code 0 and prints no `FAIL`
@@ -191,8 +193,16 @@ should be reported, not used to retune the experiment.
 
 ### Feature-stage handover and possible extensions
 
+The direct recovery classifier, ten-day ridge and design-only expanded-penalty
+investigation are now implemented as a separate **exploratory extension**. See
+[the extension guide](docs/model_extensions.md) and
+[its build summary](reports/models/extensions/summary.md). These additions preserve
+the original one-day experiment and do not add portfolio or evaluation-performance
+analysis. Recovery uses three classes, including unresolved, and only 2–4 features.
+
 The suggestions below are optional extensions from the feature stage. They are
-not part of the implemented one-day ridge experiment above.
+not all part of the implemented experiments. The extension guide describes the
+actual choices; the older suggestions below remain for research context.
 
 **Rebuild and check** (just for a fresh build of feature sets)
 
