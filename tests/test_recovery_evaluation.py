@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 
-from src.analysis.recovery_evaluation import (evaluate_frozen, metric_row, metrics_table,
+from src.analysis.recovery_evaluation import (audit_bundle, evaluate_frozen, metric_row, metrics_table,
                                              paired_intervals, score_rows)
 from src.models.extensions.config import MODEL_IDS, MODEL_SETS, OUTPUT_DIR, PROBABILITY_COLUMNS
 
@@ -107,6 +107,14 @@ class PairedBootstrapTests(unittest.TestCase):
 
 
 class FrozenArtifactTests(unittest.TestCase):
+    def test_regenerated_manifest_cannot_replace_the_frozen_snapshot(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder)
+            original = (OUTPUT_DIR / "recovery/manifest.json").read_text()
+            (path / "manifest.json").write_text(original.replace('"price": 10.0', '"price": 1.0'))
+            with self.assertRaisesRegex(ValueError, "frozen 4d19649"):
+                audit_bundle(path, pd.DataFrame(), pd.DataFrame())
+
     def test_real_snapshot_scoring_cannot_fit_or_select_and_does_not_change_inputs(self):
         # This public integration seam reads the exact committed snapshot used by
         # the report. A future accidental fit/selection call must fail this test.

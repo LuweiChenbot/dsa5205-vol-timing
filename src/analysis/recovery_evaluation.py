@@ -25,6 +25,9 @@ LABEL_NAMES = {-1: "continuation", 0: "unresolved", 1: "recovery"}
 BOOTSTRAP_REPLICATES = 10000
 BLOCK_EPISODES = 5
 SEED = 5205
+# Anchor the analysis to the exact pre-evaluation bundle, not merely a manifest
+# that could later be regenerated alongside different predictions or penalties.
+FROZEN_MANIFEST_SHA256 = "79bd368e687c47b387a171f2c89d3e7ba6a142954be06115e782da603caa5825"
 
 
 def digest(path: Path) -> str:
@@ -147,6 +150,8 @@ def read_outcomes(path: Path) -> pd.DataFrame:
 
 def audit_bundle(folder: Path, panel: pd.DataFrame, events: pd.DataFrame) -> tuple[dict, dict[Path, str]]:
     manifest_path = folder / "manifest.json"
+    if digest(manifest_path) != FROZEN_MANIFEST_SHA256:
+        raise ValueError("recovery manifest is not the frozen 4d19649 snapshot; no replacement or retuning accepted")
     manifest = json.loads(manifest_path.read_text())
     paths = {manifest_path: digest(manifest_path)}
     for name, expected in manifest["signal_sha256"].items():

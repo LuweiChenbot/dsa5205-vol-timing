@@ -9,6 +9,8 @@ itself remains a prediction-only pipeline. No portfolio strategy is evaluated.
 
 - Read the committed recovery predictions, outcomes and manifest at the existing
   snapshot. Verify their hashes before scoring. Never call fitting or selection.
+  Pin the manifest's SHA-256 to commit `4d19649` so regenerating a different bundle
+  cannot silently replace the frozen input, even if its internal hashes agree.
 - Frozen C values: price=10, VIX level=1, term structure=1, matched term structure=1.
   Preserve features, labels, episode grouping, timing and all prediction files.
 - The saved predictions already reflect causal expanding refits. Evaluation here
