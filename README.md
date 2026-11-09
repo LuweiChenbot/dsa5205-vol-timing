@@ -38,6 +38,7 @@ Run every command from the repository root.
 | Backtest tests | `python -m unittest tests.test_backtest -v` | execution timing, costs, rules and statistics checks |
 | 8. Interaction test (explanatory) | `python -m src.analysis.interaction_test` | `reports/analysis/interaction_tests.csv`, `.md` |
 | Interaction test checks | `python -m unittest tests.test_analysis -v` | Newey-West and sample-cutoff checks |
+| End-to-end walkthrough (for the video) | open `notebooks/end_to_end.ipynb` with the project venv as kernel (`python -m ipykernel install --user --name dsa5205-vol-timing`) | one call per member (`member1.build_data()` ... `member4.run_backtest()`); steps 2–3 recompute and check against the committed snapshot without overwriting it |
 
 Expected output: `build` reports about 3,000 in-sample trading days
 (2014-01-02 to 2025-12-31). `verify` exits with code 0 and prints no `FAIL`
