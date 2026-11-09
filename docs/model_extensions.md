@@ -31,6 +31,14 @@ probabilities without invoking fitting or selection. See
 `reports/recovery_evaluation/report.md` and `docs/recovery_evaluation_protocol.md`.
 It does not change this extension's settings, predictions or build artifacts.
 
+Additional frozen diagnostics run with
+`python -m src.analysis.recovery_diagnostics`. See
+`reports/recovery_diagnostics/report.md` for class-specific discrimination,
+probability distributions, confusion matrices, calibration curves, validation
+ranking sensitivity and saved coefficient contrasts. No models or calibrators
+are fitted, and no settings or forecasts are changed. Omitting an episode from
+candidate scoring is a sensitivity check, not refitted cross-validation.
+
 ## Direct recovery classifier
 
 Each decline-trigger day receives the existing ten-session barrier label, using
@@ -188,6 +196,7 @@ choices, not evaluation performance.
 
 ```bash
 python -m unittest tests.test_models tests.test_model_extensions -v
+python -m unittest tests.test_recovery_evaluation tests.test_recovery_diagnostics -v
 python -m tests.test_pipeline
 python -m tests.test_features
 python -m tests.test_events

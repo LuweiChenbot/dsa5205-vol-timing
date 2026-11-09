@@ -33,6 +33,7 @@ Run every command from the repository root.
 | Exploratory recovery and ten-day models | `python -m src.models.extensions.pipeline` | `data/processed/models/extensions/`, `reports/models/extensions/` |
 | Extension tests | `python -m unittest tests.test_model_extensions -v` | horizon, class probability and overlap-weighting checks |
 | Evaluate frozen recovery probabilities | `python -m src.analysis.recovery_evaluation` | `reports/recovery_evaluation/`, without any refitting |
+| Diagnose frozen recovery models | `python -m src.analysis.recovery_diagnostics` | `reports/recovery_diagnostics/`: class discrimination, calibration and stability; no retuning |
 
 Expected output: `build` reports about 3,000 in-sample trading days
 (2014-01-02 to 2025-12-31). `verify` exits with code 0 and prints no `FAIL`
@@ -206,6 +207,14 @@ scores the saved 2019–2025 probabilities against historical-prior and uniform
 baselines, with paired episode-block uncertainty intervals. It never refits or
 retunes a model. Reproduce it with `python -m src.analysis.recovery_evaluation`;
 the methodology is in [the evaluation protocol](docs/recovery_evaluation_protocol.md).
+
+The subsequent [frozen-model diagnostics](reports/recovery_diagnostics/report.md)
+examine continuation discrimination, class-probability calibration and sensitivity
+of the original validation rankings to omitting one episode from scoring. Saved
+coefficient contrasts are also summarized. Reproduce with
+`python -m src.analysis.recovery_diagnostics`; see
+[the diagnostic protocol](docs/recovery_diagnostics_protocol.md). These checks
+leave all model settings, forecasts and the primary evaluation unchanged.
 
 The suggestions below are optional extensions from the feature stage. They are
 not all part of the implemented experiments. The extension guide describes the
