@@ -169,8 +169,10 @@ exploring. In 2019–2025 **both flip sign**, and over the full sample neither i
 significant. Twelve regressions were run, so one or two p-values below 0.05 are
 expected by chance.
 
-The relationship is not stable over time, which matches the backtest: the
-ridge models learnt the 2014–2018 pattern and it reversed out of sample. The
+The explanatory association changes sign across periods. Separately, the rolling
+ridge forecasts also fail to establish reliable predictive benefit. Their
+coefficients are refitted daily using matured labels, including earlier evaluation
+outcomes once available; only the selected penalties stay fixed. The
 effective sample is the number of decline episodes (about 88), not the 289
 decline days, so the power is low.
 
@@ -182,9 +184,12 @@ was run after the test results were known. It is reported in full.
 (`reports/recovery_evaluation/report.md`). It is an exploratory extension,
 designed after the one-day results were seen, that predicts the barrier label
 directly on all 175 test-period trigger days. The term-structure classifier
-does *worse* than simply predicting the historical class mix: log loss
-+4.1%, approximate 95% interval [−2.7%, +11.8%]. The price-only classifier
-ranks recoveries slightly better (recovery-vs-rest AUC 0.56 vs 0.52). Separately,
+has higher observed log loss than the historical-prior baseline: +4.109%, or
++0.040173 log-loss units, with an approximate 95% interval of
+[−0.027368, +0.118418] in **absolute log-loss units**, not percentages. This
+interval crosses zero, so no improvement is established. The price-only classifier
+ranks recoveries slightly better (recovery-versus-rest AUC 0.56 vs 0.52, with
+continuation and unresolved both in the rest class). Separately,
 a design-only sensitivity check with a wider penalty grid selects α = 100,000
 for every feature set, which is almost pure shrinkage to the historical mean
 (`reports/models/extensions/summary.md`). The regression test, the classifier

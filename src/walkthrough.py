@@ -9,8 +9,10 @@
 
 The upstream outputs are a frozen, hash-checked snapshot. Members 2 and 3
 therefore recompute their stage in memory and compare it with the committed
-files instead of overwriting them. A refit on another machine differs in the
-last floating-point digits, and the frozen-snapshot guards rightly reject that.
+files instead of overwriting them. Recomputed tables must have the same unique
+row/column labels and match within an explicit absolute numerical tolerance.
+Refits on another machine may differ in the last floating-point digits; the
+original saved files remain hash-checked and are never replaced by these refits.
 To regenerate files on purpose, use the README commands.
 """
 import inspect
@@ -25,14 +27,34 @@ from src import config
 
 
 def _same(name: str, new: pd.DataFrame, saved: pd.DataFrame, tol: float = 1e-8) -> float:
-    """Compare a recomputed table with the committed one; return the largest gap."""
+    """Check exact coverage/schema, align order, then compare with absolute tolerance."""
+    if not np.isfinite(tol) or tol < 0:
+        raise ValueError("snapshot tolerance must be finite and nonnegative")
+    if any(not labels.is_unique for frame in (new, saved) for labels in (frame.index, frame.columns)):
+        raise AssertionError(f"{name}: duplicate row or column labels")
+    try:
+        pd.testing.assert_index_equal(new.index, saved.index, exact=True, check_order=False)
+        pd.testing.assert_index_equal(new.columns, saved.columns, exact=True, check_order=False)
+    except AssertionError as error:
+        raise AssertionError(f"{name}: row/column labels differ from the committed snapshot") from error
+    # Alignment is safe only after rejecting missing, extra and duplicate labels.
     new = new.reindex(index=saved.index, columns=saved.columns)
     num = saved.select_dtypes("number").columns
-    gap = float(np.nanmax(np.abs(new[num].to_numpy(float) - saved[num].to_numpy(float)))) if len(num) else 0.0
-    same_nan = new[num].isna().equals(saved[num].isna())
+    if not new.select_dtypes("number").columns.equals(num):
+        raise AssertionError(f"{name}: numeric/non-numeric column types differ")
+    if any(pd.api.types.is_complex_dtype(dtype) for frame in (new, saved) for dtype in frame[num].dtypes):
+        raise AssertionError(f"{name}: expected real-valued numeric columns")
+    actual = new[num].to_numpy(dtype=float, na_value=np.nan)
+    expected = saved[num].to_numpy(dtype=float, na_value=np.nan)
+    if np.isinf(actual).any() or np.isinf(expected).any():
+        raise AssertionError(f"{name}: infinite values are not valid snapshot data")
+    same_nan = np.array_equal(np.isnan(actual), np.isnan(expected))
+    finite = np.isfinite(actual) & np.isfinite(expected)
+    gap = float(np.max(np.abs(actual[finite] - expected[finite]), initial=0.0))
     ok = gap <= tol and same_nan and new.drop(columns=num).equals(saved.drop(columns=num))
+    status = f"matches committed snapshot within absolute tolerance {tol:.1e}" if ok else "DIFFERS"
     print(f"  {name:<12} {saved.shape[0]:>5} rows x {saved.shape[1]:>2} cols   "
-          f"max gap {gap:.1e}   {'matches committed snapshot' if ok else 'DIFFERS'}")
+          f"max gap {gap:.1e}   {status}")
     if not ok:
         raise AssertionError(f"{name}: recomputed values differ from the committed file")
     return gap
@@ -99,9 +121,10 @@ def train_models() -> pd.DataFrame:
     from src.models.config import ModelConfig
     from src.models.handoff import load_predictions, wide_predictions
     from src.models.pipeline import run_experiment
-    print("Refitting six models walk-forward (about a minute)...", flush=True)
+    print("Recomputing one-day ridge validation and forecasts "
+          "(five ridge models + rolling-mean baseline)...", flush=True)
     result = run_experiment(load_panel(), load_features(), load_events(), ModelConfig())
-    print(f"Frozen alphas: {result.selected_alphas}")
+    print(f"Design-selected alphas (held fixed during evaluation): {result.selected_alphas}")
     saved = wide_predictions(load_predictions())        # hash-checked against the manifest
     _same("forecasts", wide_predictions(result.predictions), saved, tol=1e-10)
     return result.metrics
